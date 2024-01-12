@@ -181,3 +181,130 @@
         (id 'x) 
         (add (num 10) (num 1)) 
         (id 'x)))
+
+#|
+substitute 10 for x in {with {y x} y}
+|#
+(test (subst (with (id 'y) (id 'x) (id 'y))
+             (id 'x) 10)
+      (with (id 'y) (num 10) (id 'y)))
+
+#|
+substitute 10 for x in {with {x y} x}
+|#
+(test (subst (with (id 'x) (id 'y) (id 'x))
+             (id 'x) 10)
+      (with (id 'x) (id 'y) (id 'x)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;; 5
+(test (interp (num 5))
+      5)
+
+;; {+ 1 2}
+(test (interp (add (num 1) (num 2)))
+      3)
+
+;; {- 3 2}
+(test (interp (sub (num 3) (num 2)))
+      1)
+
+;; {+ 1 {- 3 2}}
+(test (interp (add (num 1) (sub (num 3) (num 2))))
+      2)
+
+#|
+{with {x {+ 1 2}}
+      {+ x x}}
+|#
+(test (interp (with (id 'x) (add (num 1) (num 2))
+                    (add (id 'x) (id 'x))))
+      6)
+
+#|
+x
+|#
+(test/exn (interp (id 'x))
+          "free identifier")
+
+#|
+{+ {with {x {+ 1 2}}
+         {+ x x}}
+   {with {x {- 4 3}}
+         {+ x x}}}}
+|#
+(test (interp (add (with (id 'x) (add (num 1) (num 2))
+                         (add (id 'x) (id 'x)))
+                   (with (id 'x) (sub (num 4) (num 3))
+                         (add (id 'x) (id 'x)))))
+      8)
+
+#|
+{+ {with {x {+ 1 2}}
+         {+ x x}}
+   {with {y {- 4 3}}
+         {+ y y}}}}
+|#
+(test (interp (add (with (id 'x) (add (num 1) (num 2))
+                         (add (id 'x) (id 'x)))
+                   (with (id 'y) (sub (num 4) (num 3))
+                         (add (id 'y) (id 'y)))))
+      8)
+
+#|
+{with {x {+ 1 2}}
+      {with {x {- 4 3}}
+            {+ x x}}}
+|#
+(test (interp (with (id 'x) (add (num 1) (num 2))
+                    (with (id 'x) (sub (num 4) (num 3))
+                          (add (id 'x) (id 'x)))))
+      2)
+
+#|
+{with {x {+ 1 2}}
+      {with {y {- 4 3}}
+            {+ x x}}}
+|#
+(test (interp (with (id 'x) (add (num 1) (num 2))
+                    (with (id 'y) (sub (num 4) (num 3))
+                          (add (id 'x) (id 'x)))))
+      6)
+
+#|
+substitute 10 for x in {+ 1 x}
+|#
+(test (subst (add (num 1) (id 'x))
+             (id 'x)
+             10)
+      (add (num 1) (num 10)))
+
+#|
+substitute 10 for x in y
+|#
+(test (subst (id 'y) (id 'x) 10)
+      (id 'y))
+
+#|
+substitute 10 for x in {- x 1}
+|#
+(test (subst (sub (id 'x) (num 1))
+             (id 'x) 10)
+      (sub (num 10) (num 1)))
+
+#|
+substitute 10 for x in {with {y 17} x}
+|#
+(test (subst (with (id 'y) (num 17) (id 'x))
+             (id 'x) 10)
+      (with (id 'y) (num 17) (num 10)))
+
+#|
+substitute 10 for x in {with {y x} y}
+|#
+(test (subst (with (id 'y) (id 'x) (id 'y))
+             (id 'x) 10)
+      (with (id 'y) (num 10) (id 'y)))
