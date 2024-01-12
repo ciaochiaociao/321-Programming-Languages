@@ -28,8 +28,8 @@
     [num (n number?)]
     [add (wae1 WAE?) (wae2 WAE?)]
     [sub (wae1 WAE?) (wae2 WAE?)]
-    ;;; [with (bounding-id (id bounding-id)) (id-value-ae WAE?) (body-ae WAE?)]
-    [with (bounding-id id?) (id-value-ae WAE?) (body-ae WAE?)]
+    ;;; [with (name (id name)) (id-value-ae WAE?) (body-ae WAE?)]
+    [with (name id?) (id-value-ae WAE?) (body-ae WAE?)]
     [id (x symbol?)]
 )
 
@@ -41,10 +41,10 @@
         [num (n) n]
         [add (wae1 wae2) (+ (interp wae1) (interp wae2))]
         [sub (wae1 wae2) (- (interp wae1) (interp wae2))]
-        [with (bounding-id id-value-wae body-wae) 
+        [with (name id-value-wae body-wae) 
             (interp 
                 (subst 
-                    bounding-id 
+                    name 
                     (interp id-value-wae) 
                     body-wae)
             )]
@@ -52,28 +52,28 @@
     )
 )
 
-(define (subst bounding-id id-value body-wae)  ; (id 'x)  1
+(define (subst name id-value body-wae)  ; (id 'x)  1
     (type-case WAE body-wae
         [num (n) body-wae]
         [add (wae1 wae2) (add 
-            (subst bounding-id id-value wae1)
-            (subst bounding-id id-value wae2))]
+            (subst name id-value wae1)
+            (subst name id-value wae2))]
         [sub (wae1 wae2) (sub
-            (subst bounding-id id-value wae1)
-            (subst bounding-id id-value wae2))]
-        [with (bounding-id2  ; (id 'y)
+            (subst name id-value wae1)
+            (subst name id-value wae2))]
+        [with (name2  ; (id 'y)
             id-value-wae2  ; (num 2)
             body-wae2)  ; (id 'x)
-            (with bounding-id2
-                (subst bounding-id id-value id-value-wae2)
+            (with name2
+                (subst name id-value id-value-wae2)
 
-                (if (equal? bounding-id bounding-id2)
+                (if (equal? name name2)
                     body-wae2; shadowing
-                    (subst bounding-id id-value body-wae2))
+                    (subst name id-value body-wae2))
                 )
         ]  ; 
         [id (x)
-            (if (equal? body-wae bounding-id)
+            (if (equal? body-wae name)
                 (num id-value) 
                 body-wae)]
     )
