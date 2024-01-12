@@ -1,39 +1,47 @@
 #lang plai
 
-#|
-<WAE> ::= <num>
-       |  {+ <WAE> <WAE>}
-       |  {- <WAE> <WAE>}
-       |  {with {<id> <WAE>} <WAE>}
-       |  <id>
-|#
-
 (print-only-errors)
 
-(define-type WAE
-  [num (n number?)]
-  [add (lhs WAE?)
-       (rhs WAE?)]
-  [sub (lhs WAE?)
-       (rhs WAE?)]
-  [with (name symbol?)
-        (named-expr WAE?)
-        (body WAE?)]
-  [id (name symbol?)])
+#|
+<FunDef> ::= {deffun {<id> <id>} <F1WAE>}
+<F1WAE> ::= <num>
+         | {+ <F1WAE> <F1WAE>}
+         | {- <F1WAE> <F1WAE>}
+         | {with {<id> <F1WAE>} <F1WAE>}
+         | <id>
+         | {<id> <F1WAE>}
+|#
+(define-type F1WAE
+    [num (n number?)]
+    [add (l F1WAE?) (r F1WAE?)]
+    [sub (l F1WAE?) (r F1WAE?)]
+    [with (name symbol?)
+            (named-expr F1WAE?)
+            (body F1WAE?)]
+    [id (name symbol?)]
+    [app (fun-name symbol?)
+        (arg-expr F1WAE?)]
+)
+
+(define-type FunDef 
+    [deffun (fun-name symbol?) (param-name symbol?) (f1wae F1WAE?)]
+)
+
 
 ;; interp : WAE? -> number?
 (define (interp an-wae)
-  (type-case WAE an-wae
+  (type-case F1WAE an-wae
     [num (n) n]
     [add (l r) (+ (interp l) (interp r))]
     [sub (l r) (- (interp l) (interp r))]
     [with (name named-expr body)
           (interp (subst body name (interp named-expr)))]
-    [id (name) (error 'interp "free identifier: ~a" name)]))
+    [id (name) (error 'interp "free identifier: ~a" name)]
+    [app (fun-name arg-expr) "?"]))
 
 ;; subst : WAE? symbol? number? -> WAE?
 (define (subst expr name value)
-  (type-case WAE expr
+  (type-case F1WAE expr
     [num (n) expr]
     [add (l r) (add (subst l name value)
                     (subst r name value))]
@@ -47,7 +55,9 @@
                     (subst body name value)))]
     [id (name2) (if (equal? name2 name)
                     (num value)
-                    expr)]))
+                    expr)]
+    [app (fun-name arg-expr) "?"]
+                    ))
 
 ;; 5
 (test (interp (num 5))
