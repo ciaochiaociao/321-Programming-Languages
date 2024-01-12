@@ -26,10 +26,10 @@
 
 (define-type WAE
     [num (n number?)]
-    [add (wae1 WAE?) (wae2 WAE?)]
-    [sub (wae1 WAE?) (wae2 WAE?)]
-    ;;; [with (name (id name)) (id-value-ae WAE?) (body-ae WAE?)]
-    [with (name id?) (id-value-ae WAE?) (body-ae WAE?)]
+    [add (l WAE?) (r WAE?)]
+    [sub (l WAE?) (r WAE?)]
+    ;;; [with (name (id name)) (value WAE?) (body WAE?)]
+    [with (name id?) (value WAE?) (body WAE?)]
     [id (x symbol?)]
 )
 
@@ -39,43 +39,43 @@
 (define (interp an-wae)
     (type-case WAE an-wae
         [num (n) n]
-        [add (wae1 wae2) (+ (interp wae1) (interp wae2))]
-        [sub (wae1 wae2) (- (interp wae1) (interp wae2))]
-        [with (name id-value-wae body-wae) 
+        [add (l r) (+ (interp l) (interp r))]
+        [sub (l r) (- (interp l) (interp r))]
+        [with (name value-wae body) 
             (interp 
                 (subst 
+                    body
                     name 
-                    (interp id-value-wae) 
-                    body-wae)
+                    (interp value-wae) )
             )]
         [id (x) (error 'interp "free identifier: ~a" x)]
     )
 )
 
-(define (subst name id-value body-wae)  ; (id 'x)  1
-    (type-case WAE body-wae
-        [num (n) body-wae]
-        [add (wae1 wae2) (add 
-            (subst name id-value wae1)
-            (subst name id-value wae2))]
-        [sub (wae1 wae2) (sub
-            (subst name id-value wae1)
-            (subst name id-value wae2))]
+(define (subst body name value )  ; (id 'x)  1
+    (type-case WAE body
+        [num (n) body]
+        [add (l r) (add 
+            (subst l name value )
+            (subst r name value ))]
+        [sub (l r) (sub
+            (subst l name value )
+            (subst r name value ))]
         [with (name2  ; (id 'y)
-            id-value-wae2  ; (num 2)
-            body-wae2)  ; (id 'x)
+            value-wae2  ; (num 2)
+            body2)  ; (id 'x)
             (with name2
-                (subst name id-value id-value-wae2)
+                (subst value-wae2 name value )
 
                 (if (equal? name name2)
-                    body-wae2; shadowing
-                    (subst name id-value body-wae2))
+                    body2; shadowing
+                    (subst body2 name value ))
                 )
         ]  ; 
         [id (x)
-            (if (equal? body-wae name)
-                (num id-value) 
-                body-wae)]
+            (if (equal? body name)
+                (num value) 
+                body)]
     )
 )
 
@@ -92,23 +92,23 @@
 ;;;         (num 1)
 
 (test (subst
+    (add (id 'x) (num 1))
     (id 'x)
-    2
-    (add (id 'x) (num 1)))
+    2)
     (add (num 2) (num 1)))
 (test (subst 
+    (add (id 'x) (num 1))
     (id 'y)
-    3
-    (add (id 'x) (num 1)))
+    3)
     (add (id 'x) (num 1)))
 
 (test (subst 
-    (id 'x)
-    1
     (with (id 'y)
         (num 2)
         (id 'x)
         )
+    (id 'x)
+    1
         )
     (with (id 'y)
         (num 2)
@@ -116,12 +116,12 @@
         )
 )
 (test (subst 
-    (id 'x)  
-    1
     (with (id 'x)
         (num 2)
         (id 'x)
         )
+    (id 'x)  
+    1
         )
     (with (id 'x)
         (num 2)
@@ -171,12 +171,12 @@
 ;;;     4)
 ;;; 
 (test (subst
-             (id 'x)
-             10 
              (with 
                 (id 'x) 
                 (add (id 'x) (num 1)) 
-                (id 'x)))
+                (id 'x))
+             (id 'x)
+             10 )
       (with 
         (id 'x) 
         (add (num 10) (num 1)) 
