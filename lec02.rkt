@@ -16,7 +16,7 @@
        (rhs WAE?)]
   [sub (lhs WAE?)
        (rhs WAE?)]
-  [with (name symbol?)
+  [with (name id?)
         (named-expr WAE?)
         (body WAE?)]
   [id (name symbol?)])
@@ -69,7 +69,7 @@
 {with {x {+ 1 2}}
       {+ x x}}
 |#
-(test (interp (with 'x (add (num 1) (num 2))
+(test (interp (with (id 'x) (add (num 1) (num 2))
                     (add (id 'x) (id 'x))))
       6)
 
@@ -85,9 +85,9 @@ x
    {with {x {- 4 3}}
          {+ x x}}}}
 |#
-(test (interp (add (with 'x (add (num 1) (num 2))
+(test (interp (add (with (id 'x) (add (num 1) (num 2))
                          (add (id 'x) (id 'x)))
-                   (with 'x (sub (num 4) (num 3))
+                   (with (id 'x) (sub (num 4) (num 3))
                          (add (id 'x) (id 'x)))))
       8)
 
@@ -97,9 +97,9 @@ x
    {with {y {- 4 3}}
          {+ y y}}}}
 |#
-(test (interp (add (with 'x (add (num 1) (num 2))
+(test (interp (add (with (id 'x) (add (num 1) (num 2))
                          (add (id 'x) (id 'x)))
-                   (with 'y (sub (num 4) (num 3))
+                   (with (id 'y) (sub (num 4) (num 3))
                          (add (id 'y) (id 'y)))))
       8)
 
@@ -108,8 +108,8 @@ x
       {with {x {- 4 3}}
             {+ x x}}}
 |#
-(test (interp (with 'x (add (num 1) (num 2))
-                    (with 'x (sub (num 4) (num 3))
+(test (interp (with (id 'x) (add (num 1) (num 2))
+                    (with (id 'x) (sub (num 4) (num 3))
                           (add (id 'x) (id 'x)))))
       2)
 
@@ -118,8 +118,8 @@ x
       {with {y {- 4 3}}
             {+ x x}}}
 |#
-(test (interp (with 'x (add (num 1) (num 2))
-                    (with 'y (sub (num 4) (num 3))
+(test (interp (with (id 'x) (add (num 1) (num 2))
+                    (with (id 'y) (sub (num 4) (num 3))
                           (add (id 'x) (id 'x)))))
       6)
 
@@ -147,30 +147,30 @@ substitute 10 for x in {- x 1}
 #|
 substitute 10 for x in {with {y 17} x}
 |#
-(test (subst (with 'y (num 17) (id 'x))
+(test (subst (with (id 'y) (num 17) (id 'x))
              'x 10)
-      (with 'y (num 17) (num 10)))
+      (with (id 'y) (num 17) (num 10)))
 
 #|
 substitute 10 for x in {with {y x} y}
 |#
-(test (subst (with 'y (id 'x) (id 'y))
+(test (subst (with (id 'y) (id 'x) (id 'y))
              'x 10)
-      (with 'y (num 10) (id 'y)))
+      (with (id 'y) (num 10) (id 'y)))
 
 #|
 substitute 10 for x in {with {x y} x}
 |#
-(test (subst (with 'x (id 'y) (id 'x))
+(test (subst (with (id 'x) (id 'y) (id 'x))
              'x 10)
-      (with 'x (id 'y) (id 'x)))
+      (with (id 'x) (id 'y) (id 'x)))
 
 #|
 substitute 10 for x in 
   {with {x {+ x 1}}
     x}}
 |#
-(test (subst (with 'x (add (id 'x) (num 1)) (id 'x))
+(test (subst (with (id 'x) (add (id 'x) (num 1)) (id 'x))
              'x 10)
-      (with 'x (add (num 10) (num 1)) (id 'x)))
+      (with (id 'x) (add (num 10) (num 1)) (id 'x)))
 
