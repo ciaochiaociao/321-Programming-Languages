@@ -1,103 +1,89 @@
 #lang plai
 
-(define eight-principles
-  (list
-   "Know your rights."
-   "Acknowledge your sources."
-   "Protect your work."
-   "Avoid suspicion."
-   "Do your own work."
-   "Never falsify a record or permit another person to do so."
-   "Never fabricate data, citations, or experimental results."
-   "Always tell the truth when discussing your work with your instructor."))
-
 (print-only-errors)
 
 (define-type Tree
-  [positive-leaf (val natural?)]
-  [negative-leaf (val natural?)]
-  [interior-node (left Tree?) (right Tree?)])
+    [positive-leaf (val natural?)]
+    [negative-leaf (val natural?)]
+    [interior-node (left Tree?) (right Tree?)])
 
 
 ; function that returns true if the tree contains the given value
 (define (contains? tree check_val)
-  (type-case Tree tree
-    [positive-leaf (val) (if (= val check_val) #t #f)]
-    [negative-leaf (val) (if (= val (- check_val)) #t #f)]
-    [interior-node (left right) (or (contains? left check_val) (contains? right check_val))]
-    ))
+    (type-case Tree tree
+        [positive-leaf (val) (if (= val check_val) #t #f)]
+        [negative-leaf (val) (if (= val (- check_val)) #t #f)]
+        [interior-node (left right) (or (contains? left check_val) (contains? right check_val))]
+        ))
 
 
 ; function that returns the smallest value in the tree
 (define (smallest tree)
-  (type-case Tree tree
-    [positive-leaf (val) val]
-    [negative-leaf (val) (- val)]
-    [interior-node (left right) (min (smallest left) (smallest right))]
-    ))
+    (type-case Tree tree
+        [positive-leaf (val) val]
+        [negative-leaf (val) (- val)]
+        [interior-node (left right) (min (smallest left) (smallest right))]
+        ))
 
 ; function that returns the sum of all values in the tree
 (define (sum tree)
-  (type-case Tree tree
-    [positive-leaf (val) val]
-    [negative-leaf (val) (- val)]
-    [interior-node (left right) (+ (sum left) (sum right))]
-    ))
+    (type-case Tree tree
+        [positive-leaf (val) val]
+        [negative-leaf (val) (- val)]
+        [interior-node (left right) (+ (sum left) (sum right))]
+        ))
 
 ; balanced if sum of all values in the tree is equal to zero
 (define (balanced? tree)
-  (= (sum tree) 0))
+    (= (sum tree) 0))
 
 ; deeply balanced if and only if all the interior nodes in the tree are balanced.
-(define (deep-balanced? tree)
-  (type-case Tree tree
-    [positive-leaf (val) #t]
-    [negative-leaf (val) #t]
-    [interior-node (left right) (and (deep-balanced? left) (deep-balanced? right) (balanced? tree))]  ; depth first
-    ))
+(define (deeply-balanced? tree)
+    (type-case Tree tree
+        [positive-leaf (val) #t]
+        [negative-leaf (val) #t]
+        [interior-node (left right) (and (deeply-balanced? left) (deeply-balanced? right) (balanced? tree))]  ; depth first
+        ))
 
 ; a negate function, which takes a Tree as argument, and returns a new Tree of the same shape, but where the value of each leaf is negated.
 (define (negate tree)
-  (type-case Tree tree
-    [positive-leaf (val) (negative-leaf val)]
-    [negative-leaf (val) (positive-leaf val)]
-    [interior-node (left right) (interior-node (negate left) (negate right))]
-    ))
+    (type-case Tree tree
+        [positive-leaf (val) (negative-leaf val)]
+        [negative-leaf (val) (positive-leaf val)]
+        [interior-node (left right) (interior-node (negate left) (negate right))]
+        ))
 
 ; an add function, which takes a Tree as its first argument and an integer as its second, and returns a new tree where the given integer is added to the value of all the leaves in the tree input tree
 (define (add tree add_val)
-  (type-case Tree tree
-    ; use positive-leaf if the added result is positive, otherwise use negative-leaf
-    [positive-leaf (val) 
-                   (let ([result (+ val add_val)])
-                     (if (> result 0) 
-                         (positive-leaf (abs result)) 
-                         (negative-leaf (abs result))))]
+    (type-case Tree tree
+        ; use positive-leaf if the added result is positive, otherwise use negative-leaf
+        [positive-leaf (val) 
+            (let ([result (+ val add_val)])
+                (if (> result 0) 
+                    (positive-leaf (abs result)) 
+                    (negative-leaf (abs result))))]
 
-    [negative-leaf (val) 
-                   (let ([result (+ (- val) add_val)])
-                     (if (< result 0) 
-                         (negative-leaf (abs result)) 
-                         (positive-leaf (abs result))))]
+        [negative-leaf (val) 
+            (let ([result (+ (- val) add_val)])
+                (if (< result 0) 
+                    (negative-leaf (abs result)) 
+                    (positive-leaf (abs result))))]
 
-    [interior-node (left right) (interior-node (add left add_val) (add right add_val))]
-    ))
+        [interior-node (left right) (interior-node (add left add_val) (add right add_val))]
+        ))
 
 ; Implement a positive-thinking function, which takes a Tree as argument and produces a new tree, which removes all negative leaves from the original tree. If the resulting tree would have no nodes, return false.
 (define (positive-thinking tree)
-  (type-case Tree tree
-    [positive-leaf (val) (positive-leaf val)]
-    [negative-leaf (val) #f]
-    [interior-node (left right)
-                   (let ([left-tree (positive-thinking left)] [right-tree (positive-thinking right)])
-                     (cond   [(and (not left-tree) (not right-tree)) #f]
-                             [(not left-tree) right-tree]
-                             [(not right-tree) left-tree]
-                             [else (interior-node left-tree right-tree)]))]
-    ))
-
-; Official Tests
-(test (deep-balanced? (interior-node (positive-leaf 0) (positive-leaf 0)))  #t)
+    (type-case Tree tree
+        [positive-leaf (val) (positive-leaf val)]
+        [negative-leaf (val) #f]
+        [interior-node (left right)
+            (let ([left-tree (positive-thinking left)] [right-tree (positive-thinking right)])
+                (cond   [(and (not left-tree) (not right-tree)) #f]
+                        [(not left-tree) right-tree]
+                        [(not right-tree) left-tree]
+                        [else (interior-node left-tree right-tree)]))]
+        ))
 
 ; Tests for positive-leaf
 (test (contains? (positive-leaf 0) 0) #t)
@@ -159,16 +145,16 @@
 (test (balanced? (negative-leaf 5)) #f)
 (test (balanced? (interior-node (positive-leaf 5) (negative-leaf 10))) #f)
 (test (balanced? (interior-node (positive-leaf 5) (interior-node (positive-leaf 10) (negative-leaf 15)))) #t)
-(test (balanced? (interior-node (interior-node (positive-leaf 5) (negative-leaf 10)) (interior-node (positive-leaf 15) (negative-leaf 20)))) #f); Tests for deep-balanced?
+(test (balanced? (interior-node (interior-node (positive-leaf 5) (negative-leaf 10)) (interior-node (positive-leaf 15) (negative-leaf 20)))) #f); Tests for deeply-balanced?
 
-; Tests for deep-balanced?
-(test (deep-balanced? (positive-leaf 5)) #t)
-(test (deep-balanced? (negative-leaf 5)) #t)
-(test (deep-balanced? (interior-node (positive-leaf 5) (negative-leaf 10))) #f)
-(test (deep-balanced? (interior-node (positive-leaf 5) (interior-node (positive-leaf 10) (negative-leaf 15)))) #f)
-(test (deep-balanced? (interior-node (positive-leaf 0) (interior-node (positive-leaf 10) (negative-leaf 10)))) #t)
-(test (deep-balanced? (interior-node (interior-node (positive-leaf 5) (negative-leaf 5)) (interior-node (positive-leaf 15) (negative-leaf 15)))) #t)
-(test (deep-balanced? (interior-node (interior-node (positive-leaf 5) (negative-leaf 5)) (interior-node (positive-leaf 0) (negative-leaf 0)))) #t); Tests for negate function
+; Tests for deeply-balanced?
+(test (deeply-balanced? (positive-leaf 5)) #t)
+(test (deeply-balanced? (negative-leaf 5)) #t)
+(test (deeply-balanced? (interior-node (positive-leaf 5) (negative-leaf 10))) #f)
+(test (deeply-balanced? (interior-node (positive-leaf 5) (interior-node (positive-leaf 10) (negative-leaf 15)))) #f)
+(test (deeply-balanced? (interior-node (positive-leaf 0) (interior-node (positive-leaf 10) (negative-leaf 10)))) #t)
+(test (deeply-balanced? (interior-node (interior-node (positive-leaf 5) (negative-leaf 5)) (interior-node (positive-leaf 15) (negative-leaf 15)))) #t)
+(test (deeply-balanced? (interior-node (interior-node (positive-leaf 5) (negative-leaf 5)) (interior-node (positive-leaf 0) (negative-leaf 0)))) #t); Tests for negate function
 
 ; Tests for negate function
 (test (contains? (negate (positive-leaf 5)) -5) #t)
@@ -198,5 +184,5 @@
 (test (balanced? (positive-thinking (interior-node (positive-leaf 0) (negative-leaf 5)))) #t)
 (test (add (positive-thinking (interior-node (positive-leaf 5) (negative-leaf 10))) 10) (positive-leaf 15))
 (test (negate (positive-thinking (interior-node (positive-leaf 5) (negative-leaf 10)))) (negative-leaf 5))
-(test (deep-balanced? (interior-node (positive-leaf 0) (interior-node (positive-leaf 10) (negative-leaf 10)))) #t)
-(test (deep-balanced? (positive-thinking (interior-node (positive-leaf 0) (interior-node (positive-leaf 10) (negative-leaf 10))))) #f)
+(test (deeply-balanced? (interior-node (positive-leaf 0) (interior-node (positive-leaf 10) (negative-leaf 10)))) #t)
+(test (deeply-balanced? (positive-thinking (interior-node (positive-leaf 0) (interior-node (positive-leaf 10) (negative-leaf 10))))) #f)
